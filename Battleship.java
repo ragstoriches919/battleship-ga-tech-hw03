@@ -47,7 +47,7 @@ public class Battleship {
 		String current_defense = "Player 2";
 		char[][] defensePlayerGrid = playerGrid2;
 		char[][] currentPlayerMoves = playerGridMoves1;
-		
+		int[] attackCoords;
 		
 		
 		boolean gameOver = false;
@@ -55,11 +55,17 @@ public class Battleship {
 		do {
 			
 			// First, run the attack sequence
-			Battleship.playerAttackSequence(current_attack, current_defense, defensePlayerGrid, currentPlayerMoves, input);
+			attackCoords = Battleship.legitAttackCoords(current_attack, current_defense, defensePlayerGrid, currentPlayerMoves, input);
+			
 			
 			// Now, go back and change whose turn it is
 			if (current_attack == "Player 1"){
 				
+				// Attacking player
+				playerGridMoves1 = Battleship.updatePlayerMovesArr(attackCoords, playerGridMoves1, playerGrid2, current_attack, current_defense);
+				playerGrid2 = Battleship.updatePlayerGridArr(attackCoords, playerGrid2);
+				
+				// Revert to other player
 				current_attack = "Player 2";
 				current_defense = "Player 1";
 				defensePlayerGrid = playerGrid1;
@@ -67,6 +73,12 @@ public class Battleship {
 			}
 			
 			else if (current_attack == "Player 2") {
+				
+				// Attacking player
+				playerGridMoves2 = Battleship.updatePlayerMovesArr(attackCoords, playerGridMoves2, playerGrid1, current_attack, current_defense);
+				playerGrid1 = Battleship.updatePlayerGridArr(attackCoords, playerGrid1);
+				
+				// Revert to other player
 				current_attack = "Player 1";
 				current_defense = "Player 2";
 				defensePlayerGrid = playerGrid2;
@@ -76,79 +88,16 @@ public class Battleship {
 			gameOver = Battleship.checkGameOver(playerGridMoves1, playerGridMoves2);
 			
 		} while(!gameOver);
-		
-		
 	}
 	
 	
-	/**
-	 * Returns 2d array of player positions
-	 * @param playerArr - 2d array of integers
-	 * @param playerName - String ex.) "PLAYER 1"
-	 * @return 2d array of integers
-	 */
-	public static int[][] getPlayerCoords(int[][] playerArr, Scanner inputObj, String playerName){
-		
-		System.out.println(playerName + ", ENTER YOUR SHIPS' COORDINATES.");
-		
-//		Loop through and add coordinates
-		for (int i = 0; i < playerArr.length; i++) {
-			
-			System.out.println("Enter Ship " + (i+1) + " location:");
-
-			int firstCoord = inputObj.nextInt();
-			int secondCoord = inputObj.nextInt();
-			int[] tempArr = new int[]{firstCoord, secondCoord};
-			
-			
-			// Keep looping if coords are outside of range
-			while ( (firstCoord >4 || firstCoord < 0) || (secondCoord >4 || secondCoord < 0)){
-				
-				System.out.println("Invalid coordinates. Choose different coordinates.");
-				System.out.println("Enter Ship " + (i+1) + " location:");
-				firstCoord = inputObj.nextInt();
-				secondCoord = inputObj.nextInt();
-
-				tempArr[0] = firstCoord;
-				tempArr[1] = secondCoord;
-			}
-			
-
-			boolean inArray = Battleship.valueInPlayerArray(playerArr, tempArr);
-			
-			// Keep looking if coords have already been entered before.
-			while (inArray) {
-				System.out.println("You already have a ship there. Choose different coordinates.");
-				System.out.println("Enter Ship " + (i+1) + " location:");
-				firstCoord = inputObj.nextInt();
-				secondCoord = inputObj.nextInt();
-				
-				tempArr[0] = firstCoord;
-				tempArr[1] = secondCoord;
-				
-				inArray = Battleship.valueInPlayerArray(playerArr, tempArr);
-			}
-			
-			
-		    // Add values to 2D array
-			playerArr[i][0] = firstCoord;
-			playerArr[i][1] = secondCoord;
-			
-			System.out.println(Arrays.deepToString(playerArr));
-				
-			}
-
-		return playerArr;
-	}
-	
-	
-	public static char[][] playerAttackSequence(String playerAttack, String playerDefense, char[][] playerGrid, char[][] playerGridMoves, Scanner inputObj ){
+	public static int[] legitAttackCoords(String playerAttack, String playerDefense, char[][] playerGrid, char[][] playerGridMoves, Scanner inputObj ){
 		
 		System.out.println(playerAttack + ", enter hit row/column:");
 		
 		int firstCoord = inputObj.nextInt();
 		int secondCoord = inputObj.nextInt();
-//		int[] tempArr = new int[]{firstCoord, secondCoord};
+		int[] legitAttackArr = new int[]{firstCoord, secondCoord};
 		
 		// Keep looping if coords are outside of range
 		while ( (firstCoord >4 || firstCoord < 0) || (secondCoord >4 || secondCoord < 0) ){
@@ -169,35 +118,60 @@ public class Battleship {
 			
 		}
 		
+		return legitAttackArr;
+	}
+	
+	
+	//Update player grid
+	public static char[][] updatePlayerMovesArr(int[] legitAttack, char[][] playerMoves, char[][] playerGrid, String playerAttack, String playerDefense){
+		
+		int row = legitAttack[0];
+		int col = legitAttack[1];
+		
 		// Ship got hit! --update playerGridMoves
-		if (playerGrid[firstCoord][secondCoord]=='@'){
+		if (playerGrid[row][col]=='@'){
 			
 			System.out.println(playerAttack.toUpperCase() + " HIT PLAYER " + playerDefense.toUpperCase() +"’s SHIP!");
-			playerGridMoves[firstCoord][secondCoord] = 'X';
-			
+			playerMoves[row][col] = 'X';
 			
 		}
-		
 		
 		
 		// Ship missed!
-		else if (playerGrid[firstCoord][secondCoord]=='-') {
+		else if (playerGrid[row][col]=='-') {
 			System.out.println(playerAttack.toUpperCase() + " MISSED!");
-			playerGridMoves[firstCoord][secondCoord] = 'O';
+			playerMoves[row][col] = 'O';
 		}
 		
-		Battleship.printBattleShip(playerGridMoves);
+		Battleship.printBattleShip(playerMoves);
 		System.out.println("\n");
 		
-		return playerGridMoves;
+		return playerMoves;
+		
 		
 	}
 	
-	public static int[] legitAttack()
 	
-	
+	public static char[][] updatePlayerGridArr(int[] legitAttack, char[][] playerGrid) {
+		
+		int row = legitAttack[0];
+		int col = legitAttack[1];
+		
+		// Ship got hit! --update playerGridMoves
+		if (playerGrid[row][col]=='@'){
+			playerGrid[row][col] = 'X';
+		}
+		
+		// Ship missed!
+		else if (playerGrid[row][col]=='-') {
+			playerGrid[row][col] = 'O';
+		}
+		
+		return playerGrid;
+		
+	}
+		
 
-	
 	
 	/**
 	 * @param playerCoords - Array of player coords [5][2]
@@ -288,6 +262,68 @@ public class Battleship {
 		return (player1Score == 5 || player2Score == 5);	
 	}
 	
+	
+	
+	
+	/**
+	 * Returns 2d array of player positions
+	 * @param playerArr - 2d array of integers
+	 * @param playerName - String ex.) "PLAYER 1"
+	 * @return 2d array of integers
+	 */
+	public static int[][] getPlayerCoords(int[][] playerArr, Scanner inputObj, String playerName){
+		
+		System.out.println(playerName + ", ENTER YOUR SHIPS' COORDINATES.");
+		
+//		Loop through and add coordinates
+		for (int i = 0; i < playerArr.length; i++) {
+			
+			System.out.println("Enter Ship " + (i+1) + " location:");
+
+			int firstCoord = inputObj.nextInt();
+			int secondCoord = inputObj.nextInt();
+			int[] tempArr = new int[]{firstCoord, secondCoord};
+			
+			
+			// Keep looping if coords are outside of range
+			while ( (firstCoord >4 || firstCoord < 0) || (secondCoord >4 || secondCoord < 0)){
+				
+				System.out.println("Invalid coordinates. Choose different coordinates.");
+				System.out.println("Enter Ship " + (i+1) + " location:");
+				firstCoord = inputObj.nextInt();
+				secondCoord = inputObj.nextInt();
+
+				tempArr[0] = firstCoord;
+				tempArr[1] = secondCoord;
+			}
+			
+
+			boolean inArray = Battleship.valueInPlayerArray(playerArr, tempArr);
+			
+			// Keep looking if coords have already been entered before.
+			while (inArray) {
+				System.out.println("You already have a ship there. Choose different coordinates.");
+				System.out.println("Enter Ship " + (i+1) + " location:");
+				firstCoord = inputObj.nextInt();
+				secondCoord = inputObj.nextInt();
+				
+				tempArr[0] = firstCoord;
+				tempArr[1] = secondCoord;
+				
+				inArray = Battleship.valueInPlayerArray(playerArr, tempArr);
+			}
+			
+			
+		    // Add values to 2D array
+			playerArr[i][0] = firstCoord;
+			playerArr[i][1] = secondCoord;
+			
+			System.out.println(Arrays.deepToString(playerArr));
+				
+			}
+
+		return playerArr;
+	}
 	
 				
  // Use this method to print game boards to the console.

@@ -11,15 +11,19 @@ public class Battleship {
 		Scanner input = new Scanner(System.in);  // Create a Scanner object
 		System.out.println("Welcome to Battleship!" + "\n");
 		
-		
-		int[][] playerCoords1 = new int[5][2];
+		//Initial battleship locations that player inputs
+		int[][] playerCoords1 = new int[5][2]; 
 		int[][] playerCoords2 = new int[5][2];
+		
+		//Complete player grid with all ships
 		char[][] playerGrid1 = new char[5][5];
 		char[][] playerGrid2 = new char[5][5];
 		
-		char[][] playerGridMoves1 = new char[5][5];
-		char[][] playerGridMoves2 = new char[5][5];
-		
+		//Where player has tried attacking
+		char[][] playerGridMoves1 = new char[5][5]; 
+		char[][] playerGridMoves2 = new char[5][5]; 
+		playerGridMoves1 = initializePlayerGridMovesArray(playerGridMoves1);
+		playerGridMoves2 = initializePlayerGridMovesArray(playerGridMoves2);
 		
 		//Player 1 setup
 		playerCoords1 = Battleship.getPlayerCoords(playerCoords1, input, "PLAYER 1");
@@ -41,8 +45,38 @@ public class Battleship {
 		//Game start!!
 		String current_attack = "Player 1";
 		String current_defense = "Player 2";
-		Battleship.playerAttackSequence(current_attack, current_defense, playerGrid2, input);
+		char[][] defensePlayerGrid = playerGrid2;
+		char[][] currentPlayerMoves = playerGridMoves1;
+		
+		
+		
+		boolean gameOver = false;
+		
+		do {
+			
+			// First, run the attack sequence
+			Battleship.playerAttackSequence(current_attack, current_defense, defensePlayerGrid, currentPlayerMoves, input);
+			
+			// Now, go back and change whose turn it is
+			if (current_attack == "Player 1"){
 				
+				current_attack = "Player 2";
+				current_defense = "Player 1";
+				defensePlayerGrid = playerGrid1;
+				currentPlayerMoves = playerGridMoves2;	
+			}
+			
+			else if (current_attack == "Player 2") {
+				current_attack = "Player 1";
+				current_defense = "Player 2";
+				defensePlayerGrid = playerGrid2;
+				currentPlayerMoves = playerGridMoves1;	
+			}
+			
+			gameOver = Battleship.checkGameOver(playerGridMoves1, playerGridMoves2);
+			
+		} while(!gameOver);
+		
 		
 	}
 	
@@ -60,7 +94,7 @@ public class Battleship {
 //		Loop through and add coordinates
 		for (int i = 0; i < playerArr.length; i++) {
 			
-			System.out.println("Entire Ship " + (i+1) + " location:");
+			System.out.println("Enter Ship " + (i+1) + " location:");
 
 			int firstCoord = inputObj.nextInt();
 			int secondCoord = inputObj.nextInt();
@@ -71,7 +105,7 @@ public class Battleship {
 			while ( (firstCoord >4 || firstCoord < 0) || (secondCoord >4 || secondCoord < 0)){
 				
 				System.out.println("Invalid coordinates. Choose different coordinates.");
-				System.out.println("Entire Ship " + (i+1) + " location:");
+				System.out.println("Enter Ship " + (i+1) + " location:");
 				firstCoord = inputObj.nextInt();
 				secondCoord = inputObj.nextInt();
 
@@ -85,7 +119,7 @@ public class Battleship {
 			// Keep looking if coords have already been entered before.
 			while (inArray) {
 				System.out.println("You already have a ship there. Choose different coordinates.");
-				System.out.println("Entire Ship " + (i+1) + " location:");
+				System.out.println("Enter Ship " + (i+1) + " location:");
 				firstCoord = inputObj.nextInt();
 				secondCoord = inputObj.nextInt();
 				
@@ -108,7 +142,7 @@ public class Battleship {
 	}
 	
 	
-	public static char[][] playerAttackSequence(String playerAttack, String playerDefense, char[][] playerGrid, Scanner inputObj){
+	public static char[][] playerAttackSequence(String playerAttack, String playerDefense, char[][] playerGrid, char[][] playerGridMoves, Scanner inputObj ){
 		
 		System.out.println(playerAttack + ", enter hit row/column:");
 		
@@ -126,7 +160,7 @@ public class Battleship {
 		}
 		
 		// Keep looping if coords have already been fired on spots.
-		while (playerGrid[firstCoord][secondCoord]=='X' || playerGrid[firstCoord][secondCoord]=='O') {
+		while (playerGridMoves[firstCoord][secondCoord]=='X' || playerGridMoves[firstCoord][secondCoord]=='O') {
 			
 			System.out.println("You already fired on this spot. Choose different coordinates.");
 			System.out.println(playerAttack + ", enter hit row/column:");
@@ -135,23 +169,31 @@ public class Battleship {
 			
 		}
 		
-		// Ship got hit!
+		// Ship got hit! --update playerGridMoves
 		if (playerGrid[firstCoord][secondCoord]=='@'){
 			
 			System.out.println(playerAttack.toUpperCase() + " HIT PLAYER " + playerDefense.toUpperCase() +"’s SHIP!");
-			playerGrid[firstCoord][secondCoord] = 'X';
+			playerGridMoves[firstCoord][secondCoord] = 'X';
+			
 			
 		}
+		
+		
 		
 		// Ship missed!
 		else if (playerGrid[firstCoord][secondCoord]=='-') {
 			System.out.println(playerAttack.toUpperCase() + " MISSED!");
-			playerGrid[firstCoord][secondCoord] = 'O';
+			playerGridMoves[firstCoord][secondCoord] = 'O';
 		}
 		
-		return playerGrid;
+		Battleship.printBattleShip(playerGridMoves);
+		System.out.println("\n");
+		
+		return playerGridMoves;
 		
 	}
+	
+	public static int[] legitAttack()
 	
 	
 
@@ -202,6 +244,50 @@ public class Battleship {
 		}
 		return false;
 	}
+	
+	
+	public static char[][] initializePlayerGridMovesArray(char[][] playerMoves){
+		
+		for (int row = 0; row < 5; row++)
+		{
+			for (int col = 0; col < 5; col++)
+		    {
+				playerMoves[row][col] = '-'; //Whatever value you want to set them to
+		    }
+		}
+		
+		return playerMoves;
+		
+	}
+	
+	public static boolean checkGameOver(char[][] playerMoves1, char[][] playerMoves2) {
+		
+		int player1Score = 0;
+		int player2Score = 0;
+		
+		for (int row = 0; row < 5; row++)
+		{
+			for (int col = 0; col < 5; col++)
+		    {
+				if (playerMoves1[row][col] == 'X')
+					player1Score ++;
+				if (playerMoves2[row][col] == 'X')
+					player2Score ++;	
+		    }
+		}
+		System.out.println("player1=" + player1Score + " Player2="+player2Score);
+		
+		if (player1Score==5) {
+			System.out.println("PLAYER 1 WINS! YOU SUNK ALL OF YOUR OPPONENT’S SHIPS!");
+		}
+		else if (player2Score == 5) {
+			System.out.println("PLAYER 2 WINS! YOU SUNK ALL OF YOUR OPPONENT’S SHIPS!");
+		}
+		
+		
+		return (player1Score == 5 || player2Score == 5);	
+	}
+	
 	
 				
  // Use this method to print game boards to the console.

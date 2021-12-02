@@ -283,34 +283,38 @@ public class Battleship {
 			int firstCoord = inputObj.nextInt();
 			int secondCoord = inputObj.nextInt();
 			int[] tempArr = new int[]{firstCoord, secondCoord};
-			
+			boolean inArray = Battleship.valueInPlayerArray(playerArr, tempArr);			
 			
 			// Keep looping if coords are outside of range
-			while ( (firstCoord >4 || firstCoord < 0) || (secondCoord >4 || secondCoord < 0)){
+			while ( (firstCoord >4 || firstCoord < 0) || (secondCoord >4 || secondCoord < 0) || inArray  ){
 				
-				System.out.println("Invalid coordinates. Choose different coordinates.");
-				System.out.println("Enter Ship " + (i+1) + " location:");
-				firstCoord = inputObj.nextInt();
-				secondCoord = inputObj.nextInt();
 
-				tempArr[0] = firstCoord;
-				tempArr[1] = secondCoord;
-			}
-			
-
-			boolean inArray = Battleship.valueInPlayerArray(playerArr, tempArr);
-			
-			// Keep looking if coords have already been entered before.
-			while (inArray) {
-				System.out.println("You already have a ship there. Choose different coordinates.");
-				System.out.println("Enter Ship " + (i+1) + " location:");
-				firstCoord = inputObj.nextInt();
-				secondCoord = inputObj.nextInt();
 				
-				tempArr[0] = firstCoord;
-				tempArr[1] = secondCoord;
+				if ( (firstCoord >4 || firstCoord < 0) || (secondCoord >4 || secondCoord < 0)){
+					System.out.println("Invalid coordinates. Choose different coordinates.");
+					System.out.println("Enter Ship " + (i+1) + " location:");
+					
+					firstCoord = inputObj.nextInt();
+					secondCoord = inputObj.nextInt();
+	
+					tempArr[0] = firstCoord;
+					tempArr[1] = secondCoord;
+					
+				}
 				
-				inArray = Battleship.valueInPlayerArray(playerArr, tempArr);
+				if( Battleship.valueInPlayerArray(playerArr, tempArr)) {
+					System.out.println("You already have a ship there. Choose different coordinates.");
+					System.out.println("Enter Ship " + (i+1) + " location:");
+					
+					firstCoord = inputObj.nextInt();
+					secondCoord = inputObj.nextInt();
+					
+					tempArr[0] = firstCoord;
+					tempArr[1] = secondCoord;
+					
+					inArray = Battleship.valueInPlayerArray(playerArr, tempArr);
+					
+				}
 			}
 			
 			
